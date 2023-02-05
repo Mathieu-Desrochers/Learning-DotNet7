@@ -66,17 +66,17 @@ Modify the Program.cs file.
     var greeting = app.Configuration.GetValue<string>("Greeting");
     app.MapGet("/", () => greeting);
 
-From the command line.
+Configuration from the command line.
 
     > dotnet run --Greeting "Hello from command line."
 
-From the environment.
+Configuration from the environment.
 
     > $Env:Greeting = "Hello from environment"
     > dotnet run
     > $Env:Greeting = $null
 
-From the appsettings.json file.
+Configuration from the appsettings.json file.
 
     ++++ "Greeting": "Hello from appsettings."
     > dotnet run
