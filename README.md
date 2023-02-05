@@ -2,7 +2,7 @@ Creating a webapi
 -----------------
 Run the following commands.
 
-    $ dotnet new web
+    > dotnet new web
 
 Cleanup the launchSettings.json file.
 
@@ -56,7 +56,7 @@ Run the following commands.
 The base image forces port 80 in the container.
 
     > docker image build -t learning-dotnet7 .
-    > docker container run -p 80:5000 learning-dotnet7
+    > docker container run -p 5000:80 learning-dotnet7
     > curl http://localhost:5000
 
 Configuration
