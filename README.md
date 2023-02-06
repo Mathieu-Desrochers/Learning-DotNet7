@@ -33,13 +33,13 @@ By default dotnet binds on port 5000.
 
 Creating a docker image
 -----------------------
-Create a file .dockerignore with the following content.
+Create a .dockerignore file with the following content.
 
     Dockerfile
     bin
     obj
 
-Create a file Dockerfile with the following content.  
+Create a Dockerfile file with the following content.
 
     FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
     WORKDIR /src
