@@ -59,14 +59,14 @@ The base image forces dotnet to bind on port 80.
     > docker container run -p 5000:80 learning-dotnet7
     > curl http://localhost:5000
 
-Pushing to AWS
+Running on AWS
 --------------
-Create a private ECR registry.
+Create a private ECR Registry.
 
     Name: learning-dotnet7
 
 Click on View push commands.  
-Run the shown commands.
+Run the commands shown.
 
     > aws ecr get-login-password --region ca-central-1 | docker login --username AWS --password-stdin 00000.dkr.ecr.ca-central-1.amazonaws.com
     > docker tag learning-dotnet7:latest 00000.dkr.ecr.ca-central-1.amazonaws.com/learning-dotnet7:latest
@@ -76,13 +76,11 @@ Copy the repository URL.
 
     00000.dkr.ecr.ca-central-1.amazonaws.com/learning-dotnet7
 
-Running on AWS
---------------
 Create an ECS Cluster.
 
     Name: learning-dotnet7
 
-Create a Task definition.
+Create a Task Definition.
   
     Family: learning-dotnet7
     Container name: learning-dotnet7
@@ -99,7 +97,7 @@ Create a Service in the Cluster.
     Public IP: Turned on
 
 Click on the Task in the Cluster.  
-Get its public IP on the Network tab.  
+Get its public IP from the Network tab.  
 Run the following command.
 
     > curl http://public-ip
@@ -115,12 +113,30 @@ Configuration from the command line.
 
     > dotnet run --Greeting "Hello from the command line."
 
-Configuration from the environment.
+Configuration from the environment.  
+Run the following command.
 
-    > $Env:Greeting = "Hello from the environment"
-    > dotnet run
+    > $Env:Greeting = "Hello from the environment."
 
-Configuration from the appsettings.json file.  
+Configuration from the appsettings.json file.
 
     ++++ "Greeting": "Hello from appsettings."
+
+Configuration from AWS.  
+Create a Parameter in Systems Manager.
+
+    Name: /learning-dotnet7/Greeting
+    Value: Hello from AWS.
+
+Run the following command.
+
+    > dotnet add package Amazon.Extensions.Configuration.SystemsManager
+
+Modify the Program.cs file.
+
+    builder.Configuration.AddSystemsManager("/learning-dotnet7/");
+
+Run the following commands.
+
     > dotnet run
+    > curl http://localhost:5000
