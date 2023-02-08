@@ -65,16 +65,8 @@ Create a private ECR Registry.
 
     Name: learning-dotnet7
 
-Click on View push commands.  
-Run the commands shown.
-
-    > aws ecr get-login-password --region ca-central-1 | docker login --username AWS --password-stdin 00000.dkr.ecr.ca-central-1.amazonaws.com
-    > docker tag learning-dotnet7:latest 00000.dkr.ecr.ca-central-1.amazonaws.com/learning-dotnet7:latest
-    > docker push 00000.dkr.ecr.ca-central-1.amazonaws.com/learning-dotnet7:latest
-
+Click on View push commands and run them.  
 Copy the repository URL.
-
-    00000.dkr.ecr.ca-central-1.amazonaws.com/learning-dotnet7
 
 Create an ECS Cluster.
 
@@ -114,7 +106,6 @@ Configuration from the command line.
     > dotnet run --Greeting "Hello from the command line."
 
 Configuration from the environment.  
-Run the following command.
 
     > $Env:Greeting = "Hello from the environment."
 
@@ -156,11 +147,6 @@ Modify the Program.cs file.
         app.Logger.LogInformation("Saying hello.");
         return "This hello was logged.";
     });
-
-Run the following commands.
-
-    > dotnet run
-    > curl http://localhost:5000
 
 Logging to OpenTelemetry.  
 Run the following commands.
