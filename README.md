@@ -120,7 +120,9 @@ Run the following command.
 
 Configuration from the appsettings.json file.
 
-    ++++ "Greeting": "Hello from appsettings."
+    {
+      "Greeting": "Hello from appsettings."
+    }
 
 Configuration from AWS.  
 Create a Parameter in Systems Manager.
@@ -140,3 +142,77 @@ Run the following commands.
 
     > dotnet run
     > curl http://localhost:5000
+
+Further reading:
+
+    The IOptions<T> pattern and dependency injection.
+
+Producing Logs
+--------------
+Logging to the console.  
+Modify the Program.cs file.
+
+    app.MapGet("/", () => {
+        app.Logger.LogInformation("Saying hello.");
+        return "This hello was logged.";
+    });
+
+Run the following commands.
+
+    > dotnet run
+    > curl http://localhost:5000
+
+Logging to OpenTelemetry.  
+Run the following commands.
+
+    > dotnet add package OpenTelemetry.Exporter.Console
+
+Modify the Program.cs file.
+
+    builder.Logging.ClearProviders();
+    builder.Logging.AddOpenTelemetry(options =>
+    {
+        options.AddConsoleExporter();
+    });
+
+Run the following commands.
+
+    > dotnet run
+    > curl http://localhost:5000
+
+Further reading:
+
+    The ILogger<T> pattern and dependency injection.
+    The dotnet-trace tool.
+
+Producing Metrics
+-----------------
+Run the following commands.
+
+    > dotnet add package OpenTelemetry.Exporter.Console
+    > dotnet add package OpenTelemetry.Extensions.Hosting
+
+Modify the Program.cs file.
+
+    builder.Services.AddOpenTelemetryMetrics(builder =>
+    {
+        builder.AddConsoleExporter();
+        builder.AddMeter("learning-dotnet7");
+    });
+
+    var meter = new Meter("learning-dotnet7");
+    var greetingsCounter = meter.CreateCounter<int>("greetings_count");
+
+    app.MapGet("/", () => {
+        greetingsCounter.Add(1);
+        return "This hello was counted.";
+    });
+
+Run the following commands.
+
+    > dotnet run
+    > curl http://localhost:5000
+
+Further reading:
+
+    The dotnet-counters tool.
