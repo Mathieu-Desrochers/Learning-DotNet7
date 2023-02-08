@@ -138,8 +138,8 @@ Further reading:
 
     The IOptions<T> pattern and dependency injection.
 
-Producing Logs
---------------
+Managing Logs
+-------------
 Logging to the console.  
 Modify the Program.cs file.
 
@@ -148,7 +148,7 @@ Modify the Program.cs file.
         return "This hello was logged.";
     });
 
-Logging to OpenTelemetry.  
+Sending logs to OpenTelemetry.  
 Run the following commands.
 
     > dotnet add package OpenTelemetry.Exporter.Console
@@ -169,22 +169,10 @@ Run the following commands.
 Further reading:
 
     The ILogger<T> pattern and dependency injection.
-    The dotnet-trace tool.
 
-Producing Metrics
------------------
-Run the following commands.
-
-    > dotnet add package OpenTelemetry.Exporter.Console
-    > dotnet add package OpenTelemetry.Extensions.Hosting
-
+Managing Metrics
+----------------
 Modify the Program.cs file.
-
-    builder.Services.AddOpenTelemetryMetrics(builder =>
-    {
-        builder.AddConsoleExporter();
-        builder.AddMeter("learning-dotnet7");
-    });
 
     var meter = new Meter("learning-dotnet7");
     var greetingsCounter = meter.CreateCounter<int>("greetings_count");
@@ -194,11 +182,30 @@ Modify the Program.cs file.
         return "This hello was counted.";
     });
 
+Run the following commands once the program is running.
+
+    > dotnet tool install --global dotnet-counters
+    > dotnet counters ps
+    > dotnet counters monitor --process-id 1234 --counters learning-dotnet7
+
+Sending metrics to OpenTelemetry.  
+Run the following commands.
+
+    > dotnet add package OpenTelemetry.Exporter.Console
+    > dotnet add package OpenTelemetry.Extensions.Hosting
+
+Modify the Program.cs file.
+
+    builder.Services.AddOpenTelemetryMetrics(builder =>
+    {
+        builder.AddMeter("learning-dotnet7");
+        builder.AddConsoleExporter();
+    });
+
 Run the following commands.
 
     > dotnet run
     > curl http://localhost:5000
 
-Further reading:
-
-    The dotnet-counters tool.
+Managing Traces
+---------------
