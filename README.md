@@ -224,10 +224,10 @@ Modify the Program.cs file.
 
 Run the following commands once the program is running.
 
-    dotnet tool install --global dotnet-trace
-    dotnet trace ps
-    dotnet trace collect --process-id 1234 --providers="Microsoft-Diagnostics-DiagnosticSource:::FilterAndPayloadSpecs=[AS]learning-dotnet7"
-    PerfView.exe Learning-DotNet7.exe_20010101_000000.nettrace
+    > dotnet tool install --global dotnet-trace
+    > dotnet trace ps
+    > dotnet trace collect --process-id 1234 --providers="Microsoft-Diagnostics-DiagnosticSource:::FilterAndPayloadSpecs=[AS]learning-dotnet7"
+    > PerfView.exe Learning-DotNet7.exe_20010101_000000.nettrace
 
 Sending traces to OpenTelemetry.  
 Run the following commands.
