@@ -61,24 +61,24 @@ The base image forces dotnet to bind on port 80.
 
 Running on AWS
 --------------
-Create a private ECR Registry.
+Create a private ECR registry.
 
     Name: learning-dotnet7
 
 Click on View push commands and run them.  
 Copy the repository URL.
 
-Create an ECS Cluster.
+Create an ECS cluster.
 
     Name: learning-dotnet7
 
-Create a Task Definition.
+Create a task definition.
   
     Family: learning-dotnet7
     Container name: learning-dotnet7
     Image URI: repository URL copied above
 
-Create a Service in the Cluster.
+Create a service in the cluster.
 
     Launch type: Fargate
     Application type: Service
@@ -88,7 +88,7 @@ Create a Service in the Cluster.
     Create a new security group (learning-dotnet7, HTTP, Anywhere)
     Public IP: Turned on
 
-Click on the Task in the Cluster.  
+Click on the task in the cluster.  
 Get its public IP from the Network tab.  
 Run the following command.
 
@@ -198,8 +198,8 @@ Modify the Program.cs file.
 
     builder.Services.AddOpenTelemetryMetrics(builder =>
     {
-        builder.AddMeter("learning-dotnet7");
         builder.AddConsoleExporter();
+        builder.AddMeter("learning-dotnet7");
     });
 
 Run the following commands.
@@ -209,3 +209,43 @@ Run the following commands.
 
 Managing Traces
 ---------------
+Modify the Program.cs file.
+
+    var activitySource = new ActivitySource("learning-dotnet7");
+
+    app.MapGet("/", () =>
+    {
+        using (var activity = activitySource.StartActivity("Greeting"))
+        {
+            Thread.Sleep(500);
+            return "This hello was timed.";
+        }
+    });
+
+Run the following commands once the program is running.
+
+    dotnet tool install --global dotnet-trace
+    dotnet trace ps
+    dotnet trace collect --process-id 1234 --providers="Microsoft-Diagnostics-DiagnosticSource:::FilterAndPayloadSpecs=[AS]learning-dotnet7"
+    PerfView.exe Learning-DotNet7.exe_20010101_000000.nettrace
+
+Sending traces to OpenTelemetry.  
+Run the following commands.
+
+    > dotnet add package OpenTelemetry.Exporter.Console
+    > dotnet add package OpenTelemetry.Extensions.Hosting
+    > dotnet add package OpenTelemetry.Instrumentation.AspNetCore
+
+Modify the Program.cs file.
+
+    builder.Services.AddOpenTelemetryTracing(builder =>
+    {
+        builder.AddAspNetCoreInstrumentation();
+        builder.AddConsoleExporter();
+        builder.AddSource("learning-dotnet7");
+    });
+
+Run the following commands.
+
+    > dotnet run
+    > curl http://localhost:5000
