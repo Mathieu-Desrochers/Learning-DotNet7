@@ -69,7 +69,6 @@ Modify the Program.cs file.
 
 Managing Logs
 -------------
-Logging to the console.  
 Modify the Program.cs file.
 
     app.MapGet("/", () =>
