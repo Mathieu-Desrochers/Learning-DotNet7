@@ -31,6 +31,167 @@ By default dotnet binds on port 5000.
     > dotnet run
     > curl http://localhost:5000
 
+Managing Configuration
+----------------------
+Modify the Program.cs file.
+
+    var greeting = app.Configuration.GetValue<string>("Greeting");
+    app.MapGet("/", () => greeting);
+
+Configuration from the command line.
+
+    > dotnet run --Greeting "Hello from the command line."
+
+Configuration from the environment.  
+
+    > $Env:Greeting = "Hello from the environment."
+
+Configuration from the appsettings.json file.
+
+    {
+      "Greeting": "Hello from appsettings."
+    }
+
+Configuration from AWS.  
+Create a Parameter in Systems Manager.
+
+    Name: /learning-dotnet7/Greeting
+    Value: Hello from AWS.
+
+Run the following command.
+
+    > dotnet add package Amazon.Extensions.Configuration.SystemsManager
+
+Modify the Program.cs file.
+
+    builder.Configuration.AddSystemsManager("/learning-dotnet7/");
+
+Configuration using the IOptions pattern.  
+Create the following class.
+
+    public class GreetingOptions
+    {
+        public string Greeting { get; set; } = String.Empty;
+    }
+
+Modify the appsettings.json file.
+
+    {
+      "GreetingOptions": {
+          "Greeting": "Hello from IOptions."
+      }
+    }
+
+Modify the Program.cs file.
+
+    var section = builder.Configuration.GetSection(nameof(GreetingOptions));
+    builder.Services.Configure<GreetingOptions>(section);
+
+    app.MapGet("/", (IOptions<GreetingOptions> greetingOptions) => greetingOptions.Value.Greeting);
+
+Managing Logs
+-------------
+Logging to the console.  
+Modify the Program.cs file.
+
+    app.MapGet("/", () =>
+    {
+        app.Logger.LogInformation("Saying hello.");
+        return "This hello was logged.";
+    });
+
+Logging using the ILogger pattern.
+Modify the Program.cs file.
+
+    app.MapGet("/", (ILogger<Program> logger) =>
+    {
+        logger.LogInformation("Saying hello using ILogger.");
+        return "This hello was logged.";
+    });
+
+Sending logs to OpenTelemetry.  
+Run the following commands.
+
+    > dotnet add package OpenTelemetry.Exporter.Console
+
+Modify the Program.cs file.
+
+    builder.Logging.ClearProviders();
+    builder.Logging.AddOpenTelemetry(options =>
+    {
+        options.AddConsoleExporter();
+    });
+
+Managing Metrics
+----------------
+Modify the Program.cs file.
+
+    var meter = new Meter("learning-dotnet7");
+    var greetingsCounter = meter.CreateCounter<int>("greetings_count");
+
+    app.MapGet("/", () =>
+    {
+        greetingsCounter.Add(1);
+        return "This hello was counted.";
+    });
+
+Run the following commands once the program is running.
+
+    > dotnet counters monitor --name Learning-DotNet7 --counters learning-dotnet7
+
+Sending metrics to OpenTelemetry.  
+Run the following commands.
+
+    > dotnet add package OpenTelemetry.Exporter.Console
+    > dotnet add package OpenTelemetry.Extensions.Hosting
+
+Modify the Program.cs file.
+
+    builder.Services.AddOpenTelemetry().WithMetrics(configure =>
+    {
+        configure.AddConsoleExporter();
+        configure.AddMeter("learning-dotnet7");
+    });
+
+Managing Traces
+---------------
+Modify the Program.cs file.
+
+    var activitySource = new ActivitySource("learning-dotnet7");
+
+    app.MapGet("/", () =>
+    {
+        using (var activity = activitySource.StartActivity("Greeting"))
+        {
+            Thread.Sleep(500);
+            return "This hello was timed.";
+        }
+    });
+
+Run the following commands once the program is running.
+
+    > dotnet trace collect --name Learning-DotNet7 --providers="Microsoft-Diagnostics-DiagnosticSource:::FilterAndPayloadSpecs=[AS]learning-dotnet7"
+    > PerfView.exe Learning-DotNet7.exe_00000000_000000.nettrace
+
+Sending traces to OpenTelemetry.  
+Run the following commands.
+
+    > dotnet add package OpenTelemetry.Exporter.Console
+    > dotnet add package OpenTelemetry.Extensions.Hosting
+    > dotnet add package OpenTelemetry.Instrumentation.AspNetCore
+
+Modify the Program.cs file.
+
+    builder.Services.AddOpenTelemetry().WithTracing(configure =>
+    {
+        configure.AddAspNetCoreInstrumentation();
+        configure.AddConsoleExporter();
+        configure.AddSource("learning-dotnet7");
+    });
+
+Managing Localization
+---------------------
+
 Creating a Docker Image
 -----------------------
 Create a .dockerignore file with the following content.
@@ -93,159 +254,3 @@ Get its public IP from the Network tab.
 Run the following command.
 
     > curl http://public-ip
-
-Managing Configuration
-----------------------
-Modify the Program.cs file.
-
-    var greeting = app.Configuration.GetValue<string>("Greeting");
-    app.MapGet("/", () => greeting);
-
-Configuration from the command line.
-
-    > dotnet run --Greeting "Hello from the command line."
-
-Configuration from the environment.  
-
-    > $Env:Greeting = "Hello from the environment."
-
-Configuration from the appsettings.json file.
-
-    {
-      "Greeting": "Hello from appsettings."
-    }
-
-Configuration from AWS.  
-Create a Parameter in Systems Manager.
-
-    Name: /learning-dotnet7/Greeting
-    Value: Hello from AWS.
-
-Run the following command.
-
-    > dotnet add package Amazon.Extensions.Configuration.SystemsManager
-
-Modify the Program.cs file.
-
-    builder.Configuration.AddSystemsManager("/learning-dotnet7/");
-
-Run the following commands.
-
-    > dotnet run
-    > curl http://localhost:5000
-
-Further reading:
-
-    The IOptions<T> pattern and dependency injection.
-
-Managing Logs
--------------
-Logging to the console.  
-Modify the Program.cs file.
-
-    app.MapGet("/", () => {
-        app.Logger.LogInformation("Saying hello.");
-        return "This hello was logged.";
-    });
-
-Sending logs to OpenTelemetry.  
-Run the following commands.
-
-    > dotnet add package OpenTelemetry.Exporter.Console
-
-Modify the Program.cs file.
-
-    builder.Logging.ClearProviders();
-    builder.Logging.AddOpenTelemetry(options =>
-    {
-        options.AddConsoleExporter();
-    });
-
-Run the following commands.
-
-    > dotnet run
-    > curl http://localhost:5000
-
-Further reading:
-
-    The ILogger<T> pattern and dependency injection.
-
-Managing Metrics
-----------------
-Modify the Program.cs file.
-
-    var meter = new Meter("learning-dotnet7");
-    var greetingsCounter = meter.CreateCounter<int>("greetings_count");
-
-    app.MapGet("/", () => {
-        greetingsCounter.Add(1);
-        return "This hello was counted.";
-    });
-
-Run the following commands once the program is running.
-
-    > dotnet tool install --global dotnet-counters
-    > dotnet counters ps
-    > dotnet counters monitor --process-id 1234 --counters learning-dotnet7
-
-Sending metrics to OpenTelemetry.  
-Run the following commands.
-
-    > dotnet add package OpenTelemetry.Exporter.Console
-    > dotnet add package OpenTelemetry.Extensions.Hosting
-
-Modify the Program.cs file.
-
-    builder.Services.AddOpenTelemetryMetrics(builder =>
-    {
-        builder.AddConsoleExporter();
-        builder.AddMeter("learning-dotnet7");
-    });
-
-Run the following commands.
-
-    > dotnet run
-    > curl http://localhost:5000
-
-Managing Traces
----------------
-Modify the Program.cs file.
-
-    var activitySource = new ActivitySource("learning-dotnet7");
-
-    app.MapGet("/", () =>
-    {
-        using (var activity = activitySource.StartActivity("Greeting"))
-        {
-            Thread.Sleep(500);
-            return "This hello was timed.";
-        }
-    });
-
-Run the following commands once the program is running.
-
-    > dotnet tool install --global dotnet-trace
-    > dotnet trace ps
-    > dotnet trace collect --process-id 1234 --providers="Microsoft-Diagnostics-DiagnosticSource:::FilterAndPayloadSpecs=[AS]learning-dotnet7"
-    > PerfView.exe Learning-DotNet7.exe_20010101_000000.nettrace
-
-Sending traces to OpenTelemetry.  
-Run the following commands.
-
-    > dotnet add package OpenTelemetry.Exporter.Console
-    > dotnet add package OpenTelemetry.Extensions.Hosting
-    > dotnet add package OpenTelemetry.Instrumentation.AspNetCore
-
-Modify the Program.cs file.
-
-    builder.Services.AddOpenTelemetryTracing(builder =>
-    {
-        builder.AddAspNetCoreInstrumentation();
-        builder.AddConsoleExporter();
-        builder.AddSource("learning-dotnet7");
-    });
-
-Run the following commands.
-
-    > dotnet run
-    > curl http://localhost:5000
