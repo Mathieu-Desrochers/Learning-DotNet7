@@ -38,15 +38,15 @@ Modify the Program.cs file.
     var greeting = app.Configuration.GetValue<string>("Greeting");
     app.MapGet("/", () => greeting);
 
-Configuration from the command line.
+From the command line.
 
     > dotnet run --Greeting "Hello from the command line."
 
-Configuration from the environment.  
+From the environment.  
 
     > $Env:Greeting = "Hello from the environment."
 
-Configuration from the appsettings.json file.
+From the appsettings.json file.
 
     {
       "Greeting": "Hello from appsettings."
@@ -58,14 +58,6 @@ Create the following class.
     public class GreetingOptions
     {
         public string Greeting { get; set; } = String.Empty;
-    }
-
-Modify the appsettings.json file.
-
-    {
-      "GreetingOptions": {
-          "Greeting": "Hello from IOptions."
-      }
     }
 
 Modify the Program.cs file.
