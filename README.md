@@ -112,7 +112,7 @@ Modify the Program.cs file.
         return "This hello was counted.";
     });
 
-Run the following commands once the program is running.
+Run the following command once the program is running.
 
     > dotnet counters monitor --name Learning-DotNet7 --counters learning-dotnet7
 
