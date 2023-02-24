@@ -100,7 +100,7 @@ Modify the Program.cs file.
         return "This hello was logged.";
     });
 
-Logging using the ILogger pattern.
+Logging using the ILogger pattern.  
 Modify the Program.cs file.
 
     app.MapGet("/", (ILogger<Program> logger) =>
