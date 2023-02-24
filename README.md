@@ -168,11 +168,6 @@ Modify the Program.cs file.
         }
     });
 
-Run the following commands once the program is running.
-
-    > dotnet trace collect --name Learning-DotNet7 --providers="Microsoft-Diagnostics-DiagnosticSource:::FilterAndPayloadSpecs=[AS]learning-dotnet7"
-    > PerfView.exe Learning-DotNet7.exe_00000000_000000.nettrace
-
 Sending traces to OpenTelemetry.  
 Run the following commands.
 
@@ -188,6 +183,9 @@ Modify the Program.cs file.
         configure.AddConsoleExporter();
         configure.AddSource("learning-dotnet7");
     });
+
+Managing Authentification
+-------------------------
 
 Managing Localization
 ---------------------
