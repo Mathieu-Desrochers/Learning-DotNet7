@@ -52,20 +52,6 @@ Configuration from the appsettings.json file.
       "Greeting": "Hello from appsettings."
     }
 
-Configuration from AWS.  
-Create a Parameter in Systems Manager.
-
-    Name: /learning-dotnet7/Greeting
-    Value: Hello from AWS.
-
-Run the following command.
-
-    > dotnet add package Amazon.Extensions.Configuration.SystemsManager
-
-Modify the Program.cs file.
-
-    builder.Configuration.AddSystemsManager("/learning-dotnet7/");
-
 Configuration using the IOptions pattern.  
 Create the following class.
 
@@ -87,7 +73,7 @@ Modify the Program.cs file.
     var section = builder.Configuration.GetSection(nameof(GreetingOptions));
     builder.Services.Configure<GreetingOptions>(section);
 
-    app.MapGet("/", (IOptions<GreetingOptions> greetingOptions) => greetingOptions.Value.Greeting);
+    app.MapGet("/", (IOptions<GreetingOptions> options) => options.Value.Greeting);
 
 Managing Logs
 -------------
