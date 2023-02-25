@@ -65,7 +65,10 @@ Modify the Program.cs file.
     var section = builder.Configuration.GetSection(nameof(GreetingOptions));
     builder.Services.Configure<GreetingOptions>(section);
 
-    app.MapGet("/", (IOptions<GreetingOptions> options) => options.Value.Greeting);
+    app.MapGet("/", (IOptions<GreetingOptions> options) =>
+    {
+        return options.Value.Greeting;
+    });
 
 Managing Logs
 -------------
@@ -112,7 +115,7 @@ Modify the Program.cs file.
         return "This hello was counted.";
     });
 
-Run the following command once the program is running.
+Run the following commands once the program is running.
 
     > dotnet counters monitor --name Learning-DotNet7 --counters learning-dotnet7
 
@@ -191,13 +194,13 @@ From the headers.
     > curl -H 'Accept-Language: fr-CA' http://localhost:5000
 
 Localization using the IStringLocalizer pattern.  
-Add the SharedResources.cs file.
+Create the following class.
 
     public class SharedResources
     {
     }
 
-Add the SharedResources.en-US.resx file.
+Create the SharedResources.en-US.resx file.
 
     <root>
       <data name="Greeting">
@@ -205,7 +208,7 @@ Add the SharedResources.en-US.resx file.
       </data>
     </root>
 
-Add the SharedResources.fr-CA.resx file.
+Create the SharedResources.fr-CA.resx file.
 
     <root>
       <data name="Greeting">
@@ -222,16 +225,97 @@ Modify the Program.cs file.
 
 Managing Authentification
 -------------------------
+Register to auth0.com.  
+
+    Create an application
+    Name: learning-dotnet7-application
+    Type: Regular Web Applications
+    Allowed Callback URLs: https://localhost/callback
+    
+    Take note of the following values
+    Domain: ********.us.auth0.com
+    ClientID: ********
+    ClientSecret: ********
+
+    Create an API
+    Name: learning-dotnet7-api
+    Identifier: learning-dotnet7-api
+
+    Create a database connection
+    Name: learning-dotnet7-database
+    Applications: learning-dotnet7-application
+
+    Create a user
+    Email: learning@dotnet7.com
+    Password: ********
+    Connection: learning-dotnet7-database
+
+Run the following commands.
+
+    > dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
+
+Modify the Program.cs file.
+
+    builder.Services
+        .AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.Authority = "https://********.us.auth0.com/";
+            options.Audience = "learning-dotnet7-api";
+        });
+
+    builder.Services.AddAuthorization();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapGet("/", () => "Hello World!").RequireAuthorization();
+
+Prove the authentication is required.  
+Run the following commands.
+
+    > curl http://localhost:5000
+
+Perform a user login.  
+Browse to the following url.  
+Recover the code in the callback URL.
+
+    https://********.us.auth0.com/authorize?
+      response_type=code&
+      client_id=********&
+      audience=learning-dotnet7-api&
+      redirect_uri=https://localhost/callback
+
+Simulate the server side callback.  
+Run the following commands.  
+Recover the access token in the response body.
+
+    > curl -X POST 'https://********.us.auth0.com/oauth/token'
+      -H 'content-type: application/x-www-form-urlencoded'
+      -d 'grant_type=authorization_code'
+      -d 'client_id=********'
+      -d 'client_secret=********'
+      -d 'code=********'
+      -d 'redirect_uri=https://localhost/callback'
+
+Prove the authentication is working.  
+Run the following commands.
+
+    > curl http://localhost:5000 -H 'Authorization: Bearer ********'
 
 Creating a Docker Image
 -----------------------
-Create a .dockerignore file with the following content.
+Create the .dockerignore file.
 
     Dockerfile
     bin
     obj
 
-Create a Dockerfile file with the following content.
+Create the Dockerfile file.
 
     FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
     WORKDIR /src
