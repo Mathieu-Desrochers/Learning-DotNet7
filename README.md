@@ -161,9 +161,6 @@ Modify the Program.cs file.
         configure.AddSource("learning-dotnet7");
     });
 
-Managing Authentification
--------------------------
-
 Managing Localization
 ---------------------
 Modify the Program.cs file.
@@ -196,7 +193,9 @@ From the headers.
 Localization using the IStringLocalizer pattern.  
 Add the SharedResources.cs file.
 
-    public class SharedResources {}
+    public class SharedResources
+    {
+    }
 
 Add the SharedResources.en-US.resx file.
 
@@ -220,6 +219,9 @@ Modify the Program.cs file.
     {
         return stringLocalizer["Greeting"];
     });
+
+Managing Authentification
+-------------------------
 
 Creating a Docker Image
 -----------------------
