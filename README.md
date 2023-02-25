@@ -166,6 +166,60 @@ Managing Authentification
 
 Managing Localization
 ---------------------
+Modify the Program.cs file.
+
+    builder.Services.AddLocalization();
+
+    var supportedCultures = new[] { "en-US", "fr-CA" };
+
+    app.UseRequestLocalization(
+        new RequestLocalizationOptions()
+            .SetDefaultCulture(supportedCultures[0])
+            .AddSupportedCultures(supportedCultures)
+            .AddSupportedUICultures(supportedCultures));
+
+    app.MapGet("/", () => Thread.CurrentThread.CurrentCulture.Name);
+
+From the query string.
+
+    > curl http://localhost:5000?culture=fr-CA
+
+From the cookies.
+
+    > $cookieValue = [uri]::EscapeDataString("c=fr-CA|uic=fr-CA")
+    > curl -b ".AspNetCore.Culture=$cookieValue" http://localhost:5000
+
+From the headers.
+
+    > curl -H 'Accept-Language: fr-CA' http://localhost:5000
+
+Localization using the IStringLocalizer pattern.  
+Add the SharedResources.cs file.
+
+    public class SharedResources {}
+
+Add the SharedResources.en-US.resx file.
+
+    <root>
+      <data name="Greeting">
+        <value>Hello from resx.</value>
+      </data>
+    </root>
+
+Add the SharedResources.fr-CA.resx file.
+
+    <root>
+      <data name="Greeting">
+        <value>Bonjour du resx.</value>
+      </data>
+    </root>
+
+Modify the Program.cs file.
+
+    app.MapGet("/", string (IStringLocalizer<SharedResources> stringLocalizer) =>
+    {
+        return stringLocalizer["Greeting"];
+    });
 
 Creating a Docker Image
 -----------------------
