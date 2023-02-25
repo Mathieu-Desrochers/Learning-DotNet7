@@ -278,34 +278,111 @@ Modify the Program.cs file.
 Prove the authentication is required.  
 Run the following commands.
 
-    > curl http://localhost:5000
+    > curl -v http://localhost:5000
 
 Perform a user login.  
 Browse to the following url.  
 Recover the code in the callback URL.
 
     https://********.us.auth0.com/authorize?
-      response_type=code&
-      client_id=********&
-      audience=learning-dotnet7-api&
-      redirect_uri=https://localhost/callback
+        response_type=code&
+        client_id=********&
+        audience=learning-dotnet7-api&
+        redirect_uri=https://localhost/callback
 
 Simulate the server side callback.  
 Run the following commands.  
 Recover the access token in the response body.
 
     > curl -X POST 'https://********.us.auth0.com/oauth/token'
-      -H 'content-type: application/x-www-form-urlencoded'
-      -d 'grant_type=authorization_code'
-      -d 'client_id=********'
-      -d 'client_secret=********'
-      -d 'code=********'
-      -d 'redirect_uri=https://localhost/callback'
+        -H 'content-type: application/x-www-form-urlencoded'
+        -d 'grant_type=authorization_code'
+        -d 'client_id=********'
+        -d 'client_secret=********'
+        -d 'code=********'
+        -d 'redirect_uri=https://localhost/callback'
 
 Prove the authentication is working.  
 Run the following commands.
 
     > curl http://localhost:5000 -H 'Authorization: Bearer ********'
+
+Unit Tests
+----------
+Run the following commands.
+
+    > dotnet new classlib -o Rebates
+    > dotnet new xunit -o Rebates.Tests
+
+    > dotnet add ./Rebates.Tests/Rebates.Tests.csproj reference ./Rebates/Rebates.csproj
+
+Rename Rebates/Class1.cs to RebateCalculator.cs.  
+Modify the file content.
+
+    public class RebateCalculator
+    {
+        public decimal GetRebate(decimal orderAmount)
+        {
+            if (orderAmount >= 1000.00M)
+                return orderAmount * 0.05M;
+
+            return 0;
+        }
+    }
+
+Rename Rebates.Tests/Class1.cs to RebateCalculatorTests.cs.  
+Modify the file content.
+
+    public class RebateCalculatorTests
+    {
+        [Theory]
+        [InlineData(0.00)]
+        [InlineData(250.00)]
+        [InlineData(999.99)]
+        public void GetRebate_SmallOrder_ReturnsZero(decimal orderAmount)
+        {
+            RebateCalculator rebateCalculator = new();
+            decimal rebate = rebateCalculator.GetRebate(orderAmount);
+            Assert.Equal(0.00M, rebate);
+        }
+
+        [Theory]
+        [InlineData(1_000.00, 50.00)]
+        [InlineData(10_000.00, 500.00)]
+        [InlineData(250_000.00, 12_500.00)]
+        public void GetRebate_BigOrder_ReturnsCorrectRebate(decimal orderAmount, decimal expectedRebate)
+        {
+            RebateCalculator rebateCalculator = new();
+            decimal rebate = rebateCalculator.GetRebate(orderAmount);
+            Assert.Equal(expectedRebate, rebate);
+        }
+    }
+
+Run the following commands.
+
+    > cd Rebates.Tests
+    > dotnet test
+
+Code Coverage
+-------------
+Run the following commands.
+
+    > cd Rebates.Tests
+    > dotnet test --collect:"XPlat Code Coverage"
+
+    > dotnet tool install -g dotnet-reportgenerator-globaltool
+
+    > reportgenerator
+        -reports:"TestResults/00000000-0000-0000-0000-000000000000/coverage.cobertura.xml"
+        -targetdir:"CoverageResults"
+        -reporttypes:Html
+
+Browse to the following file.
+
+    ./CoverageResults/index.html
+
+Integration Tests
+-----------------
 
 Creating a Docker Image
 -----------------------
