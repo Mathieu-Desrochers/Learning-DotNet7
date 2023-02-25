@@ -202,7 +202,7 @@ Add the SharedResources.en-US.resx file.
 
     <root>
       <data name="Greeting">
-        <value>Hello from resx.</value>
+        <value>Hello from the resx.</value>
       </data>
     </root>
 
