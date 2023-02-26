@@ -305,6 +305,37 @@ Run the following commands.
 
     > curl http://localhost:5000 -H 'Authorization: Bearer ********'
 
+Managing Background Services
+----------------------------
+Run the following commands.
+
+    > dotnet add package Microsoft.Extensions.Hosting
+
+Create the following class.
+
+    public class CheeringBackgroundService : BackgroundService
+    {
+        private readonly ILogger<CheeringBackgroundService> logger;
+
+        public CheeringBackgroundService(ILogger<CheeringBackgroundService> logger)
+        {
+            this.logger = logger;
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(5000, cancellationToken);
+                logger.LogInformation("Good job guys, keep going!");
+            }
+        }
+    }
+
+Modify the Program.cs file.
+
+    builder.Services.AddHostedService<CheeringBackgroundService>();
+
 Creating a Docker Image
 -----------------------
 Create the .dockerignore file.
