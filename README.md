@@ -305,8 +305,8 @@ Run the following commands.
 
     > curl http://localhost:5000 -H 'Authorization: Bearer ********'
 
-Managing Background Services
-----------------------------
+Running Background Services
+---------------------------
 Run the following commands.
 
     > dotnet add package Microsoft.Extensions.Hosting
@@ -363,8 +363,8 @@ The base image forces dotnet to bind on port 80.
     > docker image build -t learning-dotnet7 .
     > docker container run -p 5000:80 learning-dotnet7
 
-Unit Tests
-----------
+Running Unit Tests
+------------------
 Create a class library and a test project.  
 Run the following commands.
 
@@ -421,8 +421,8 @@ Run the following commands.
     > cd Rebates.Tests
     > dotnet test
 
-Code Coverage
--------------
+Measuring Code Coverage
+-----------------------
 Run the following commands.
 
     > cd Rebates.Tests
@@ -439,8 +439,8 @@ Browse to the following file.
 
     ./CoverageResults/index.html
 
-Integration Tests
------------------
+Running Integration Tests
+-------------------------
 Create a webapi and a test project.  
 Run the following commands.
 
@@ -488,6 +488,46 @@ Run the following commands.
 
     > cd Shouter.Tests
     > dotnet test
+
+Packaging Libraries
+-------------------
+Register to nuget.org.
+
+    Create an API key
+    Key Name: learning-dotnet7-api-key
+    Take note of the key: ********
+
+Create a class library.  
+Run the following commands.
+
+    > dotnet new classlib
+
+Modify the Learning-DotNet7.csproj file.
+
+    <PropertyGroup>
+      <PackageId>Learning.DotNet7.Test</PackageId>
+      <Version>1.0.0</Version>
+      <Authors>Learning-DotNet7</Authors>
+      <Company>Learning-DotNet7</Company>
+    </PropertyGroup>
+
+Rename Class1.cs to NumberGenerator.cs.  
+Modify the file content.
+
+    public static class NumberGenerator
+    {
+        public static int GetNumber()
+        {
+            return 100;
+        }
+    }
+
+Run the following commands.
+
+    > dotnet pack
+    > dotnet nuget push ./bin/Debug/Learning-DotNet7.1.0.0.nupkg
+        --source https://api.nuget.org/v3/index.json
+        --api-key ********
 
 Running on AWS
 --------------
