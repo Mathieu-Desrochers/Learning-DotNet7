@@ -48,9 +48,7 @@ From the environment.
 
 From the appsettings.json file.
 
-    {
-      "Greeting": "Hello from appsettings."
-    }
+    "Greeting": "Hello from appsettings."
 
 Configuration using the IOptions pattern.  
 Create the following class.
@@ -307,14 +305,42 @@ Run the following commands.
 
     > curl http://localhost:5000 -H 'Authorization: Bearer ********'
 
+Creating a Docker Image
+-----------------------
+Create the .dockerignore file.
+
+    Dockerfile
+    bin
+    obj
+
+Create the Dockerfile file.
+
+    FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+    WORKDIR /src
+    COPY . .
+    RUN dotnet restore
+    RUN dotnet publish -c release -o /app
+
+    FROM mcr.microsoft.com/dotnet/aspnet:7.0
+    WORKDIR /app
+    COPY --from=build /app .
+    CMD ["dotnet", "Learning-DotNet7.dll"]
+
+Run the following commands.  
+The base image forces dotnet to bind on port 80.
+
+    > docker image build -t learning-dotnet7 .
+    > docker container run -p 5000:80 learning-dotnet7
+
 Unit Tests
 ----------
+Create a class library and a test project.  
 Run the following commands.
 
     > dotnet new classlib -o Rebates
     > dotnet new xunit -o Rebates.Tests
-
-    > dotnet add ./Rebates.Tests/Rebates.Tests.csproj reference ./Rebates/Rebates.csproj
+    > dotnet add ./Rebates.Tests/Rebates.Tests.csproj
+        reference ./Rebates/Rebates.csproj
 
 Rename Rebates/Class1.cs to RebateCalculator.cs.  
 Modify the file content.
@@ -330,7 +356,7 @@ Modify the file content.
         }
     }
 
-Rename Rebates.Tests/Class1.cs to RebateCalculatorTests.cs.  
+Rename Rebates.Tests/UnitTest1.cs to RebateCalculatorTests.cs.  
 Modify the file content.
 
     public class RebateCalculatorTests
@@ -350,7 +376,8 @@ Modify the file content.
         [InlineData(1_000.00, 50.00)]
         [InlineData(10_000.00, 500.00)]
         [InlineData(250_000.00, 12_500.00)]
-        public void GetRebate_BigOrder_ReturnsCorrectRebate(decimal orderAmount, decimal expectedRebate)
+        public void GetRebate_BigOrder_ReturnsCorrectRebate(
+            decimal orderAmount, decimal expectedRebate)
         {
             RebateCalculator rebateCalculator = new();
             decimal rebate = rebateCalculator.GetRebate(orderAmount);
@@ -383,34 +410,53 @@ Browse to the following file.
 
 Integration Tests
 -----------------
+Create a webapi and a test project.  
+Run the following commands.
 
-Creating a Docker Image
------------------------
-Create the .dockerignore file.
+    > dotnet new web -o Shouter
+    > dotnet new xunit -o Shouter.Tests
+    > dotnet add ./Shouter.Tests/Shouter.Tests.csproj
+        reference ./Shouter/Shouter.csproj
 
-    Dockerfile
-    bin
-    obj
+Modify the Shouter/Program.cs file.
 
-Create the Dockerfile file.
+    app.MapGet("/{value}", (string value) => value.ToUpper());
 
-    FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
-    WORKDIR /src
-    COPY . .
-    RUN dotnet restore
-    RUN dotnet publish -c release -o /app
+    public partial class Program { }
 
-    FROM mcr.microsoft.com/dotnet/aspnet:7.0
-    WORKDIR /app
-    COPY --from=build /app .
-    CMD ["dotnet", "Learning-DotNet7.dll"]
+Run the following commands.
 
-Run the following commands.  
-The base image forces dotnet to bind on port 80.
+    > cd Shouter.Tests
+    > dotnet add package Microsoft.AspNetCore.Mvc.Testing
 
-    > docker image build -t learning-dotnet7 .
-    > docker container run -p 5000:80 learning-dotnet7
-    > curl http://localhost:5000
+Rename Shouter.Tests/UnitTest1.cs to IntegrationTests.cs.  
+Modify the file content.
+
+    public class IntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+    {
+        private readonly WebApplicationFactory<Program> factory;
+
+        public IntegrationTests(WebApplicationFactory<Program> factory)
+        {
+            this.factory = factory;
+        }
+
+        [Theory]
+        [InlineData("/mumble", "MUMBLE")]
+        [InlineData("/whisper", "WHISPER")]
+        public async Task Get_DoesShout(string url, string expectedResponse)
+        {
+            var httpClient = this.factory.CreateClient();
+            var httpResponseMessage = await httpClient.GetAsync(url);
+            var result = await httpResponseMessage.Content.ReadAsStringAsync();
+            Assert.Equal(expectedResponse, result);
+        }
+    }
+
+Run the following commands.
+
+    > cd Shouter.Tests
+    > dotnet test
 
 Running on AWS
 --------------
