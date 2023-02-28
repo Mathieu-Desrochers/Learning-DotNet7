@@ -413,11 +413,11 @@ Create the docker-compose.yml file.
     version: "3.9"
     services:
       customers-api:
-        build: ./Customers-Api
+        build: "./Customers-Api"
       orders-api:
-        build: ./Orders-Api
+        build: "./Orders-Api"
         environment:
-          customers-api-url: http://customers-api
+          customers-api-url: "http://customers-api"
         ports:
           - "5000:80"
 
