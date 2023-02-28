@@ -1,5 +1,5 @@
-Creating a WebApi
------------------
+Creating a Web Api
+------------------
 Run the following commands.
 
     > dotnet new web
@@ -363,6 +363,69 @@ The base image forces dotnet to bind on port 80.
     > docker image build -t learning-dotnet7 .
     > docker container run -p 5000:80 learning-dotnet7
 
+Running Distributed Services
+----------------------------
+Create two web apis.  
+Run the following commands.
+
+    > dotnet new web -o Customers-Api
+    > dotnet new web -o Orders-Api
+
+Create their Dockerfiles.
+
+Create the Customers-Api/Models.cs file.
+
+    public record Customer(string firstName, string lastName);
+
+Modify the Customers-Api/Program.cs file.
+
+    app.MapGet("/", () => new Customer("Alice", "Alisson"));
+
+Create the Customers-Api/Models.cs file.
+
+    public record Customer(string firstName, string lastName);
+    public record Order(string customer, string coffee, int doughnuts, decimal total);
+
+Modify the Customers-Api/Program.cs file.
+
+    builder.Services.AddHttpClient();
+
+    var customersApiUrl = app.Configuration.GetValue<string>("customers-api-url");
+
+    app.MapGet("/", async Task<IResult> (IHttpClientFactory httpClientFactory) =>
+    {
+        using HttpClient httpClient = httpClientFactory.CreateClient();
+        HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(customersApiUrl);
+        if (httpResponseMessage.IsSuccessStatusCode == false)
+            return Results.Problem("Cannot get customer.");
+
+        using Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync();
+        Customer? customer = await JsonSerializer.DeserializeAsync<Customer>(stream);
+        if (customer == null)
+            return Results.Problem("Cannot deserialize customer.");
+
+        Order order = new($"{customer.firstName} {customer.lastName}", "Large", 2, 4.99M);
+        return Results.Ok(order);
+    });
+
+Create the docker-compose.yml file.
+
+    version: "3.9"
+    services:
+      customers-api:
+        build: ./Customers-Api
+      orders-api:
+        build: ./Orders-Api
+        environment:
+          customers-api-url: http://customers-api
+        ports:
+          - "5000:80"
+
+Run the following commands.
+
+    > docker compose up
+    > curl http://localhost:5000
+
 Running Unit Tests
 ------------------
 Create a class library and a test project.  
@@ -441,7 +504,7 @@ Browse to the following file.
 
 Running Integration Tests
 -------------------------
-Create a webapi and a test project.  
+Create a web api and a test project.  
 Run the following commands.
 
     > dotnet new web -o Shouter
