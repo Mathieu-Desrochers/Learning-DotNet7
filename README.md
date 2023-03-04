@@ -4,11 +4,26 @@ Run the following commands.
 
     > dotnet new web
 
-Delete the following files.
+Cleanup the launchSettings.json file.
 
-    appsettings.json
-    appsettings.Development.json
-    launchSettings.json
+    {
+      "profiles": {
+        "Default": {
+          "commandName": "Project"
+        }
+      }
+    }
+
+Delete the appsettings.Development.json file.  
+Cleanup the appsettings.json file.
+
+    {
+      "Logging": {
+        "LogLevel": {
+          "Default": "Information"
+        }
+      }
+    }
 
 Run the following commands.  
 By default dotnet binds on port 5000.
@@ -189,7 +204,7 @@ From the cookies.
 
 From the headers.
 
-    > curl -H 'Accept-Language: fr-CA' http://localhost:5000
+    > curl -H "Accept-Language: fr-CA" http://localhost:5000
 
 Localization using the IStringLocalizer pattern.  
 Create the following class.
@@ -221,31 +236,6 @@ Modify the Program.cs file.
 
 Managing Authentification
 -------------------------
-Register to auth0.com.  
-
-    Create an application
-    Name: learning-dotnet7-application
-    Type: Regular Web Applications
-    Allowed Callback URLs: https://localhost/callback
-    
-    Take note of the following values
-    Domain: ********.us.auth0.com
-    ClientID: ********
-    ClientSecret: ********
-
-    Create an API
-    Name: learning-dotnet7-api
-    Identifier: learning-dotnet7-api
-
-    Create a database connection
-    Name: learning-dotnet7-database
-    Applications: learning-dotnet7-application
-
-    Create a user
-    Email: learning@dotnet7.com
-    Password: ********
-    Connection: learning-dotnet7-database
-
 Run the following commands.
 
     > dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
@@ -271,14 +261,34 @@ Modify the Program.cs file.
 
     app.MapGet("/", () => "Hello World!").RequireAuthorization();
 
-Prove the authentication is required.  
-Run the following commands.
+Register to auth0.com.  
 
-    > curl -v http://localhost:5000
+    Create an application
+    Name: learning-dotnet7-application
+    Type: Regular Web Applications
+    Allowed Callback URLs: https://localhost/callback
+    
+    Take note of the following values
+    Domain: ********.us.auth0.com
+    ClientID: ********
+    ClientSecret: ********
+
+    Create an API
+    Name: learning-dotnet7-api
+    Identifier: learning-dotnet7-api
+
+    Create a database connection
+    Name: learning-dotnet7-database
+    Applications: learning-dotnet7-application
+
+    Create a user
+    Email: learning@dotnet7.com
+    Password: ********
+    Connection: learning-dotnet7-database
 
 Perform a user login.  
 Browse to the following url.  
-Recover the code in the callback URL.
+Recover the authorization code in the callback URL.
 
     https://********.us.auth0.com/authorize?
         response_type=code&
@@ -298,13 +308,12 @@ Recover the access token in the response body.
         -d 'code=********'
         -d 'redirect_uri=https://localhost/callback'
 
-Prove the authentication is working.  
 Run the following commands.
 
     > curl http://localhost:5000 -H 'Authorization: Bearer ********'
 
-Running Background Services
----------------------------
+Background Services
+-------------------
 Run the following commands.
 
     > dotnet add package Microsoft.Extensions.Hosting
@@ -334,36 +343,8 @@ Modify the Program.cs file.
 
     builder.Services.AddHostedService<CheeringBackgroundService>();
 
-Creating a Docker Image
------------------------
-Create the .dockerignore file.
-
-    Dockerfile
-    bin
-    obj
-
-Create the Dockerfile file.
-
-    FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
-    WORKDIR /src
-    COPY . .
-    RUN dotnet restore
-    RUN dotnet publish -c release -o /app
-
-    FROM mcr.microsoft.com/dotnet/aspnet:7.0
-    WORKDIR /app
-    COPY --from=build /app .
-    CMD ["dotnet", "Learning-DotNet7.dll"]
-
-Run the following commands.  
-The base image forces dotnet to bind on port 80.
-
-    > docker image build -t learning-dotnet7 .
-    > docker container run -p 5000:80 learning-dotnet7
-
-Running Distributed Services
-----------------------------
-Create two web apis.  
+Distributed Services
+--------------------
 Run the following commands.
 
     > dotnet new web -o Customers-Api
@@ -391,14 +372,8 @@ Modify the Customers-Api/Program.cs file.
     app.MapGet("/", async Task<IResult> (IHttpClientFactory httpClientFactory) =>
     {
         using HttpClient httpClient = httpClientFactory.CreateClient();
-        HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(customersApiUrl);
-        if (httpResponseMessage.IsSuccessStatusCode == false)
-            return Results.Problem("Cannot get customer.");
-
-        using Stream stream = await httpResponseMessage.Content.ReadAsStreamAsync();
-        Customer? customer = await JsonSerializer.DeserializeAsync<Customer>(stream);
-        if (customer == null)
-            return Results.Problem("Cannot deserialize customer.");
+        using Stream stream = await httpClient.GetStreamAsync(customersApiUrl);
+        Customer customer = await JsonSerializer.DeserializeAsync<Customer>(stream)!;
 
         Order order = new($"{customer.firstName} {customer.lastName}", "Large", 2, 4.99M);
         return Results.Ok(order);
@@ -411,6 +386,33 @@ Run the following commands.
         --customer-apis-url http://localhost:5001
 
     > curl http://localhost:5002
+
+Creating a Docker Image
+-----------------------
+Create the .dockerignore file.
+
+    Dockerfile
+    bin
+    obj
+
+Create the Dockerfile file.
+
+    FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+    WORKDIR /src
+    COPY . .
+    RUN dotnet restore
+    RUN dotnet publish -c release -o /app
+
+    FROM mcr.microsoft.com/dotnet/aspnet:7.0
+    WORKDIR /app
+    COPY --from=build /app .
+    CMD ["dotnet", "Learning-DotNet7.dll"]
+
+Run the following commands.  
+The base image forces dotnet to bind on port 80.
+
+    > docker image build -t learning-dotnet7 .
+    > docker container run -p 5000:80 learning-dotnet7
 
 Composing Docker Images
 ----------------------- 
@@ -434,9 +436,8 @@ Run the following commands.
     > docker compose up
     > curl http://localhost:5000
 
-Running Unit Tests
-------------------
-Create a class library and a test project.  
+Unit Tests
+----------
 Run the following commands.
 
     > dotnet new classlib -o Rebates
@@ -464,7 +465,6 @@ Modify the file content.
     public class RebateCalculatorTests
     {
         [Theory]
-        [InlineData(0.00)]
         [InlineData(250.00)]
         [InlineData(999.99)]
         public void GetRebate_SmallOrder_ReturnsZero(decimal orderAmount)
@@ -476,7 +476,6 @@ Modify the file content.
 
         [Theory]
         [InlineData(1_000.00, 50.00)]
-        [InlineData(10_000.00, 500.00)]
         [InlineData(250_000.00, 12_500.00)]
         public void GetRebate_BigOrder_ReturnsCorrectRebate(
             decimal orderAmount, decimal expectedRebate)
@@ -492,11 +491,10 @@ Run the following commands.
     > cd Rebates.Tests
     > dotnet test
 
-Measuring Code Coverage
------------------------
+Code Coverage
+-------------
 Run the following commands.
 
-    > cd Rebates.Tests
     > dotnet test --collect:"XPlat Code Coverage"
 
     > dotnet tool install -g dotnet-reportgenerator-globaltool
@@ -510,9 +508,8 @@ Browse to the following file.
 
     ./CoverageResults/index.html
 
-Running Integration Tests
--------------------------
-Create a web api and a test project.  
+Integration Tests
+-----------------
 Run the following commands.
 
     > dotnet new web -o Shouter
@@ -548,27 +545,18 @@ Modify the file content.
         [InlineData("/whisper", "WHISPER")]
         public async Task Get_DoesShout(string url, string expectedResponse)
         {
-            var httpClient = this.factory.CreateClient();
-            var httpResponseMessage = await httpClient.GetAsync(url);
-            var result = await httpResponseMessage.Content.ReadAsStringAsync();
+            HttpClient httpClient = this.factory.CreateClient();
+            string result = await httpClient.GetStringAsync(url);
             Assert.Equal(expectedResponse, result);
         }
     }
 
 Run the following commands.
 
-    > cd Shouter.Tests
     > dotnet test
 
 Packaging Libraries
 -------------------
-Register to nuget.org.
-
-    Create an API key
-    Key Name: learning-dotnet7-api-key
-    Take note of the key: ********
-
-Create a class library.  
 Run the following commands.
 
     > dotnet new classlib
@@ -592,6 +580,12 @@ Modify the file content.
             return 100;
         }
     }
+
+Register to nuget.org.
+
+    Create an API key
+    Key Name: learning-dotnet7-api-key
+    Take note of the key: ********
 
 Run the following commands.
 
