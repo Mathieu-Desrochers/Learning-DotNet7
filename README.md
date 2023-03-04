@@ -4,26 +4,11 @@ Run the following commands.
 
     > dotnet new web
 
-Cleanup the launchSettings.json file.
+Delete the following files.
 
-    {
-      "profiles": {
-        "Default": {
-          "commandName": "Project"
-        }
-      }
-    }
-
-Delete the appsettings.Development.json file.  
-Cleanup the appsettings.json file.
-
-    {
-      "Logging": {
-        "LogLevel": {
-          "Default": "Information"
-        }
-      }
-    }
+    appsettings.json
+    appsettings.Development.json
+    launchSettings.json
 
 Run the following commands.  
 By default dotnet binds on port 5000.
@@ -48,7 +33,22 @@ From the environment.
 
 From the appsettings.json file.
 
-    "Greeting": "Hello from appsettings."
+    {
+      "Greeting": "Hello from appsettings.json."
+    }
+
+Configuration using a .env file.  
+Run the following commands.
+
+    > dotnet add package DotNetEnv
+
+Modify the Program.cs file.
+
+    builder.Configuration.AddDotNetEnv();
+
+From the .env file.
+
+    Greeting=Hello from .env.
 
 Configuration using the IOptions pattern.  
 Create the following class.
@@ -194,9 +194,7 @@ From the headers.
 Localization using the IStringLocalizer pattern.  
 Create the following class.
 
-    public class SharedResources
-    {
-    }
+    public class SharedResources { }
 
 Create the SharedResources.en-US.resx file.
 
@@ -371,8 +369,6 @@ Run the following commands.
     > dotnet new web -o Customers-Api
     > dotnet new web -o Orders-Api
 
-Create their Dockerfiles.
-
 Create the Customers-Api/Models.cs file.
 
     public record Customer(string firstName, string lastName);
@@ -407,6 +403,18 @@ Modify the Customers-Api/Program.cs file.
         Order order = new($"{customer.firstName} {customer.lastName}", "Large", 2, 4.99M);
         return Results.Ok(order);
     });
+
+Run the following commands.
+
+    > dotnet run --project Customers-Api --urls http://localhost:5001
+    > dotnet run --project Orders-Api --urls http://localhost:5002
+        --customer-apis-url http://localhost:5001
+
+    > curl http://localhost:5002
+
+Composing Docker Images
+----------------------- 
+Create their Dockerfiles.
 
 Create the docker-compose.yml file.
 
