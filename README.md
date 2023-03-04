@@ -343,6 +343,33 @@ Modify the Program.cs file.
 
     builder.Services.AddHostedService<CheeringBackgroundService>();
 
+Creating a Docker Image
+-----------------------
+Create the .dockerignore file.
+
+    Dockerfile
+    bin
+    obj
+
+Create the Dockerfile file.
+
+    FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+    WORKDIR /src
+    COPY . .
+    RUN dotnet restore
+    RUN dotnet publish -c release -o /app
+
+    FROM mcr.microsoft.com/dotnet/aspnet:7.0
+    WORKDIR /app
+    COPY --from=build /app .
+    ENTRYPOINT ["dotnet", "Learning-DotNet7.dll"]
+
+Run the following commands.  
+The base image forces dotnet to bind on port 80.
+
+    > docker image build -t learning-dotnet7 .
+    > docker container run -p 5000:80 learning-dotnet7
+
 Distributed Services
 --------------------
 Run the following commands.
@@ -383,58 +410,35 @@ Run the following commands.
 
     > dotnet run --project Customers-Api --urls http://localhost:5001
     > dotnet run --project Orders-Api --urls http://localhost:5002
-        --customer-apis-url http://localhost:5001
+        --customers-api-url http://localhost:5001
 
     > curl http://localhost:5002
 
-Creating a Docker Image
------------------------
-Create the .dockerignore file.
-
-    Dockerfile
-    bin
-    obj
-
-Create the Dockerfile file.
-
-    FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
-    WORKDIR /src
-    COPY . .
-    RUN dotnet restore
-    RUN dotnet publish -c release -o /app
-
-    FROM mcr.microsoft.com/dotnet/aspnet:7.0
-    WORKDIR /app
-    COPY --from=build /app .
-    CMD ["dotnet", "Learning-DotNet7.dll"]
-
-Run the following commands.  
-The base image forces dotnet to bind on port 80.
-
-    > docker image build -t learning-dotnet7 .
-    > docker container run -p 5000:80 learning-dotnet7
-
 Composing Docker Images
 ----------------------- 
-Create their Dockerfiles.
+Create a docker image for each project.
+
+    Customers-Api
+    Orders-Api
 
 Create the docker-compose.yml file.
 
-    version: "3.9"
     services:
       customers-api:
-        build: "./Customers-Api"
-      orders-api:
-        build: "./Orders-Api"
-        environment:
-          customers-api-url: "http://customers-api"
+        build: ./Customers-Api
         ports:
-          - "5000:80"
+          - 5001:80
+      orders-api:
+        build: ./Orders-Api
+        environment:
+          customers-api-url: http://customers-api
+        ports:
+          - 5002:80
 
 Run the following commands.
 
     > docker compose up
-    > curl http://localhost:5000
+    > curl http://localhost:5002
 
 Unit Tests
 ----------
