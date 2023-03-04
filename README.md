@@ -52,19 +52,6 @@ From the appsettings.json file.
       "Greeting": "Hello from appsettings.json."
     }
 
-Configuration using a .env file.  
-Run the following commands.
-
-    > dotnet add package DotNetEnv
-
-Modify the Program.cs file.
-
-    builder.Configuration.AddDotNetEnv();
-
-From the .env file.
-
-    Greeting=Hello from .env.
-
 Configuration using the IOptions pattern.  
 Create the following class.
 
