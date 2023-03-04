@@ -31,8 +31,8 @@ By default dotnet binds on port 5000.
     > dotnet run
     > curl http://localhost:5000
 
-Managing Configuration
-----------------------
+Configuration
+-------------
 Modify the Program.cs file.
 
     var greeting = app.Configuration.GetValue<string>("Greeting");
@@ -83,8 +83,8 @@ Modify the Program.cs file.
         return options.Value.Greeting;
     });
 
-Managing Logs
--------------
+Logging
+-------
 Modify the Program.cs file.
 
     app.MapGet("/", () =>
@@ -115,8 +115,8 @@ Modify the Program.cs file.
         options.AddConsoleExporter();
     });
 
-Managing Metrics
-----------------
+Metrics
+-------
 Modify the Program.cs file.
 
     var meter = new Meter("learning-dotnet7");
@@ -146,8 +146,8 @@ Modify the Program.cs file.
         configure.AddMeter("learning-dotnet7");
     });
 
-Managing Traces
----------------
+Traces
+------
 Modify the Program.cs file.
 
     var activitySource = new ActivitySource("learning-dotnet7");
@@ -177,8 +177,8 @@ Modify the Program.cs file.
         configure.AddSource("learning-dotnet7");
     });
 
-Managing Localization
----------------------
+Localization
+------------
 Modify the Program.cs file.
 
     builder.Services.AddLocalization();
@@ -234,8 +234,8 @@ Modify the Program.cs file.
         return stringLocalizer["Greeting"];
     });
 
-Managing Authentification
--------------------------
+Authentication
+--------------
 Run the following commands.
 
     > dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
