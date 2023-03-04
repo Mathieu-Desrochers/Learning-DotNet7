@@ -343,8 +343,8 @@ Modify the Program.cs file.
 
     builder.Services.AddHostedService<CheeringBackgroundService>();
 
-Creating a Docker Image
------------------------
+Docker Images
+-------------
 Create the .dockerignore file.
 
     Dockerfile
