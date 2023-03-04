@@ -412,10 +412,8 @@ Run the following commands.
     > dotnet run --project Orders-Api --urls http://localhost:5002
         --customers-api-url http://localhost:5001
 
-    > curl http://localhost:5002
-
-Composing Docker Images
------------------------ 
+Composing Services
+------------------
 Create a docker image for each project.
 
     Customers-Api
@@ -438,7 +436,25 @@ Create the docker-compose.yml file.
 Run the following commands.
 
     > docker compose up
-    > curl http://localhost:5002
+
+Running a Composed Service Locally
+----------------------------------
+Modify the docker-compose.yml file.  
+Remove the service that will run locally.  
+Adjust the references to host.docker.internal and the local port.
+
+    services:
+      orders-api:
+        build: ./Orders-Api
+        environment:
+          customers-api-url: http://host.docker.internal:5001
+        ports:
+          - 5002:80
+
+Run the following commands.
+
+    > docker compose up
+    > dotnet run --project Customers-Api --urls http://localhost:5001
 
 Unit Tests
 ----------
