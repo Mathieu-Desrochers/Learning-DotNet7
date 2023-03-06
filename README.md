@@ -399,7 +399,7 @@ Run the following commands.
 
 Composing Services
 ------------------
-Create a docker image for each project.  
+Create a Dockerfile for each project.  
 Create the docker-compose.yml file.
 
     services:
