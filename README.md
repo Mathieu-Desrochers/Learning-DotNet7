@@ -424,7 +424,7 @@ Run the following commands.
 
 Collecting Distributed Telemetry
 --------------------------------
-Follow these steps for both apis.  
+Follow these steps for each project.  
 Run the following commands.
 
     > dotnet add package OpenTelemetry.Extensions.Hosting
