@@ -483,12 +483,12 @@ Create the otel-collector-config.yaml file.
     
     service:
       pipelines:
-        metrics:
-          receivers: [ otlp ]
-          exporters: [ prometheusremotewrite ]
         logs:
           receivers: [ otlp ]
           exporters: [ loki ]
+        metrics:
+          receivers: [ otlp ]
+          exporters: [ prometheusremotewrite ]
         traces:
           receivers: [ otlp ]
           exporters: [ otlp ]
