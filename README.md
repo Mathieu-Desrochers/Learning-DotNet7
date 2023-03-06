@@ -399,11 +399,7 @@ Run the following commands.
 
 Composing Services
 ------------------
-Create a docker image for each project.
-
-    Customers-Api
-    Orders-Api
-
+Create a docker image for each project.  
 Create the docker-compose.yml file.
 
     services:
@@ -497,7 +493,7 @@ Running a Composed Service Locally
 ----------------------------------
 Modify the docker-compose.yml file.  
 Remove the service that will run locally.  
-Adjust the references to host.docker.internal and the local port.
+Replace its address by host.docker.internal and its local port.
 
     services:
       orders-api:
