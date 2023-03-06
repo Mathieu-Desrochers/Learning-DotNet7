@@ -97,9 +97,9 @@ Run the following commands.
 Modify the Program.cs file.
 
     builder.Logging.ClearProviders();
-    builder.Logging.AddOpenTelemetry(options =>
+    builder.Logging.AddOpenTelemetry(configure =>
     {
-        options.AddConsoleExporter();
+        configure.AddConsoleExporter();
     });
 
 Metrics
@@ -122,15 +122,15 @@ Run the following commands once the program is running.
 Sending metrics to OpenTelemetry.  
 Run the following commands.
 
-    > dotnet add package OpenTelemetry.Exporter.Console
     > dotnet add package OpenTelemetry.Extensions.Hosting
+    > dotnet add package OpenTelemetry.Exporter.Console
 
 Modify the Program.cs file.
 
     builder.Services.AddOpenTelemetry().WithMetrics(configure =>
     {
-        configure.AddConsoleExporter();
         configure.AddMeter("learning-dotnet7");
+        configure.AddConsoleExporter();
     });
 
 Traces
@@ -151,17 +151,15 @@ Modify the Program.cs file.
 Sending traces to OpenTelemetry.  
 Run the following commands.
 
-    > dotnet add package OpenTelemetry.Exporter.Console
     > dotnet add package OpenTelemetry.Extensions.Hosting
-    > dotnet add package OpenTelemetry.Instrumentation.AspNetCore
+    > dotnet add package OpenTelemetry.Exporter.Console
 
 Modify the Program.cs file.
 
     builder.Services.AddOpenTelemetry().WithTracing(configure =>
     {
-        configure.AddAspNetCoreInstrumentation();
-        configure.AddConsoleExporter();
         configure.AddSource("learning-dotnet7");
+        configure.AddConsoleExporter();
     });
 
 Localization
@@ -423,6 +421,77 @@ Create the docker-compose.yml file.
 Run the following commands.
 
     > docker compose up
+
+Collecting Distributed Telemetry
+--------------------------------
+Follow these steps for both apis.  
+Run the following commands.
+
+    > dotnet add package OpenTelemetry.Extensions.Hosting
+    > dotnet add package OpenTelemetry.Instrumentation.AspNetCore
+    > dotnet add package OpenTelemetry.Exporter.OpenTelemetryProtocol
+    > dotnet add package OpenTelemetry.Exporter.OpenTelemetryProtocol.Logs
+
+Modify the Program.cs file.
+
+    var resourceBuilder = ResourceBuilder.CreateDefault().AddService([name-of-api]);
+    
+    builder.Logging.AddOpenTelemetry(configure =>
+    {
+        configure.SetResourceBuilder(resourceBuilder);
+        configure.AddOtlpExporter(opt => { opt.Endpoint = new Uri("http://otel-collector:4317"); });
+    });
+    
+    builder.Services.AddOpenTelemetry().WithMetrics(configure =>
+    {
+        configure.SetResourceBuilder(resourceBuilder);
+        configure.AddAspNetCoreInstrumentation();
+        configure.AddOtlpExporter(opt => { opt.Endpoint = new Uri("http://otel-collector:4317"); });
+    });
+    
+    builder.Services.AddOpenTelemetry().WithTracing(configure =>
+    {
+        configure.SetResourceBuilder(resourceBuilder);
+        configure.AddAspNetCoreInstrumentation();
+        configure.AddOtlpExporter(opt => { opt.Endpoint = new Uri("http://otel-collector:4317"); });
+    });
+
+Modify the docker-compose.yml file.  
+
+    otel-collector:
+      image: otel/opentelemetry-collector-contrib:latest
+      command: [ --config=/etc/otel-collector-config.yaml ]
+      volumes:
+        - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+
+Create the otel-collector-config.yaml file.
+
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+    
+    exporters:
+      loki:
+        endpoint: https://********:********[1]@logs-prod-********.grafana.net/loki/api/v1/push
+      prometheusremotewrite:
+        endpoint: https://********:********[1]@prometheus-********.grafana.net/api/prom/push
+      otlp:
+        endpoint: tempo-prod-********.grafana.net:443
+        headers:
+          authorization: Basic ********[2]
+    
+    service:
+      pipelines:
+        metrics:
+          receivers: [ otlp ]
+          exporters: [ prometheusremotewrite ]
+        logs:
+          receivers: [ otlp ]
+          exporters: [ loki ]
+        traces:
+          receivers: [ otlp ]
+          exporters: [ otlp ]
 
 Running a Composed Service Locally
 ----------------------------------
