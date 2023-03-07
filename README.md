@@ -246,7 +246,7 @@ Modify the Program.cs file.
 
     app.MapGet("/", () => "Hello World!").RequireAuthorization();
 
-Register to auth0.com.  
+Register to auth0.com.
 
     Create an application
     Name: learning-dotnet7-application
@@ -362,33 +362,23 @@ Run the following commands.
     > dotnet new web -o Customers-Api
     > dotnet new web -o Orders-Api
 
-Create the Customers-Api/Models.cs file.
-
-    public record Customer(string firstName, string lastName);
-
 Modify the Customers-Api/Program.cs file.
 
-    app.MapGet("/", () => new Customer("Alice", "Alisson"));
+    app.MapGet("/", () => "Alice Alisson");
 
-Create the Customers-Api/Models.cs file.
+Create the Orders-Api/Models.cs file.
 
-    public record Customer(string firstName, string lastName);
     public record Order(string customer, string coffee, int doughnuts, decimal total);
 
-Modify the Customers-Api/Program.cs file.
-
-    builder.Services.AddHttpClient();
+Modify the Orders-Api/Program.cs file.
 
     var customersApiUrl = app.Configuration.GetValue<string>("customers-api-url");
 
-    app.MapGet("/", async Task<IResult> (IHttpClientFactory httpClientFactory) =>
+    app.MapGet("/", async () =>
     {
-        using HttpClient httpClient = httpClientFactory.CreateClient();
-        using Stream stream = await httpClient.GetStreamAsync(customersApiUrl);
-        Customer customer = await JsonSerializer.DeserializeAsync<Customer>(stream)!;
-
-        Order order = new($"{customer.firstName} {customer.lastName}", "Large", 2, 4.99M);
-        return Results.Ok(order);
+        using HttpClient httpClient = new HttpClient();
+        String customer = await httpClient.GetStringAsync(customersApiUrl);
+        return new Order($"{customer}", "Large", 2, 4.99M);
     });
 
 Run the following commands.
@@ -418,8 +408,8 @@ Run the following commands.
 
     > docker compose up
 
-Collecting Distributed Telemetry
---------------------------------
+Collecting Telemetry
+--------------------
 Follow these steps for each project.  
 Run the following commands.
 
@@ -431,25 +421,26 @@ Run the following commands.
 Modify the Program.cs file.
 
     var resourceBuilder = ResourceBuilder.CreateDefault().AddService([name-of-api]);
+    var endpoint = new Uri("http://otel-collector:4317");
     
     builder.Logging.AddOpenTelemetry(configure =>
     {
         configure.SetResourceBuilder(resourceBuilder);
-        configure.AddOtlpExporter(opt => { opt.Endpoint = new Uri("http://otel-collector:4317"); });
+        configure.AddOtlpExporter(opt => { opt.Endpoint = endpoint; });
     });
     
     builder.Services.AddOpenTelemetry().WithMetrics(configure =>
     {
         configure.SetResourceBuilder(resourceBuilder);
         configure.AddAspNetCoreInstrumentation();
-        configure.AddOtlpExporter(opt => { opt.Endpoint = new Uri("http://otel-collector:4317"); });
+        configure.AddOtlpExporter(opt => { opt.Endpoint = endpoint; });
     });
     
     builder.Services.AddOpenTelemetry().WithTracing(configure =>
     {
         configure.SetResourceBuilder(resourceBuilder);
         configure.AddAspNetCoreInstrumentation();
-        configure.AddOtlpExporter(opt => { opt.Endpoint = new Uri("http://otel-collector:4317"); });
+        configure.AddOtlpExporter(opt => { opt.Endpoint = endpoint; });
     });
 
 Modify the docker-compose.yml file.  
@@ -469,13 +460,13 @@ Create the otel-collector-config.yaml file.
     
     exporters:
       loki:
-        endpoint: https://********:********[1]@logs-prod-********.grafana.net/loki/api/v1/push
+        endpoint: https://********:********@logs-prod-********.grafana.net/loki/api/v1/push
       prometheusremotewrite:
-        endpoint: https://********:********[1]@prometheus-********.grafana.net/api/prom/push
+        endpoint: https://********:********@prometheus-********.grafana.net/api/prom/push
       otlp:
         endpoint: tempo-prod-********.grafana.net:443
         headers:
-          authorization: Basic ********[2]
+          authorization: Basic ********
     
     service:
       pipelines:
@@ -489,8 +480,34 @@ Create the otel-collector-config.yaml file.
           receivers: [ otlp ]
           exporters: [ otlp ]
 
-Running a Composed Service Locally
-----------------------------------
+Register to grafana.com.
+
+    Create an API key
+    Name: learning-dotnet7
+    Role: MetricsPublisher
+
+    Click on Send Logs under Loki
+    Modify the loki exporter endpoint
+    Set the username to the User number
+    Set the password to the API key
+    Complete the server name
+
+    Click on Send Metrics under Prometheus
+    Modify the prometheusremotewrite exporter endpoint
+    Set the username to the User number
+    Set the password to the API key
+    Complete the server name
+
+    Click on Send Traces under Tempo
+    Modify the otlp exporter endpoint
+    Set the authorization to echo -n "User number:API key" | base64
+    Complete the server name
+
+Metrics are exported every 60 seconds.  
+Add the logging exporter to see exports at the console.
+
+Uncomposing a Service
+---------------------
 Modify the docker-compose.yml file.  
 Remove the service that will run locally.  
 Replace its address by host.docker.internal and its local port.
